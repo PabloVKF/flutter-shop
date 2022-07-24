@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shop/models/cart.dart';
 import 'package:shop/utils/app_routes.dart';
 import '../exceptions/http_exception.dart';
+import '../models/auth.dart';
 import '../models/product.dart';
 
 class ProductGridItem extends StatelessWidget {
@@ -19,6 +20,7 @@ class ProductGridItem extends StatelessWidget {
       context,
       listen: false,
     );
+    final auth = Provider.of<Auth>(context, listen: false);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(15),
@@ -28,11 +30,10 @@ class ProductGridItem extends StatelessWidget {
             builder: (ctx, product, child) => IconButton(
               onPressed: () async {
                 try {
-                  await product.toggleFavorite();
+                  await product.toggleFavorite(
+                      auth.token ?? '', auth.userId ?? '');
                 } on HttpException catch (error) {
-                  msg.showSnackBar(
-                    SnackBar(content: Text(error.msg))
-                  );
+                  msg.showSnackBar(SnackBar(content: Text(error.msg)));
                 }
               },
               icon: Icon(
@@ -76,9 +77,13 @@ class ProductGridItem extends StatelessWidget {
               arguments: product,
             );
           },
-          child: Image.network(
-            product.imageUrl,
-            fit: BoxFit.cover,
+          child: Hero(
+            tag: product.id,
+            child: FadeInImage(
+              placeholder: const AssetImage('assets/images/product-placeholder.png'),
+              image: NetworkImage(product.imageUrl),
+              fit: BoxFit.cover,
+            ),
           ),
         ),
       ),
